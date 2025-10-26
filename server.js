@@ -14,12 +14,10 @@ app.use(express.json());
 
 // ✅ PostgreSQL connection
 const pool = new pg.Pool({
-  user: "postgres", // 👈 نام کاربر PostgreSQL
-  host: "localhost",
-  database: "postgres", // 👈 یا نام دیتابیس پروژه‌ات (مثلاً "solarsmart")
-  password: "13771110", // 👈 رمز عبور PostgreSQL
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 pool
   .connect()
