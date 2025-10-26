@@ -60,7 +60,7 @@ export default function Signup() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("https://solarsmart-api.onrender.com/api/register", {
+    fetch("https://solarsmart-backend.onrender.com/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, gender }),
