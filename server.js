@@ -6,7 +6,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 const app = express();
-const port = 4000;
+
+// ✅ تنظیم پورت برای Render یا لوکال
+const PORT = process.env.PORT || 4000;
 
 // ✅ Middleware
 app.use(cors());
@@ -15,9 +17,8 @@ app.use(express.json());
 // ✅ PostgreSQL connection
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
-
 
 pool
   .connect()
@@ -38,10 +39,17 @@ const SECRET = "solar_secret_key";
       gender VARCHAR(10)
     );
   `);
+  console.log("✅ users table ready");
 })();
 
 // ---------------------------------------------------------------------------
-// 📘 مسیر ثبت‌نام (با جنسیت)
+// 📘 مسیر تست سلامت سرور (برای اطمینان از آنلاین بودن Render)
+app.get("/api/test", (req, res) => {
+  res.json({ message: "✅ Backend is alive!" });
+});
+
+// ---------------------------------------------------------------------------
+// 📘 مسیر ثبت‌نام (Sign Up)
 app.post("/api/register", async (req, res) => {
   const { name, email, password, gender } = req.body;
   if (!name || !email || !password || !gender)
@@ -81,7 +89,7 @@ app.post("/api/register", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 🔐 مسیر ورود (login)
+// 🔐 مسیر ورود (Login)
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -105,7 +113,12 @@ app.post("/api/login", async (req, res) => {
     res.json({
       message: "ورود موفق ✅",
       token,
-      user: { id: user.id, name: user.name, email: user.email, gender: user.gender },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        gender: user.gender,
+      },
     });
   } catch (err) {
     console.error("❌ Login error:", err);
@@ -143,7 +156,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// ✏️ ویرایش کاربر (مدیریتی)
+// ✏️ ویرایش کاربر
 app.put("/api/users/:id", async (req, res) => {
   const { id } = req.params;
   const { name, email, gender } = req.body;
@@ -173,7 +186,7 @@ app.delete("/api/users/:id", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 📊 آمار برای داشبورد
+// 📊 آمار کاربران (برای داشبورد)
 app.get("/api/stats", async (req, res) => {
   try {
     const result = await pool.query(
@@ -181,7 +194,6 @@ app.get("/api/stats", async (req, res) => {
     );
     const totalUsers = result.rows.length;
     const latestUsers = result.rows.slice(0, 5);
-
     res.json({ totalUsers, latestUsers });
   } catch (err) {
     console.error("❌ Database query error in /api/stats:", err);
@@ -190,7 +202,7 @@ app.get("/api/stats", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 🚀 اجرای سرور
-app.listen(port, () => {
-  console.log(`✅ Server running on http://localhost:${port}`);
+// 🚀 اجرای سرور (مهم‌ترین بخش برای Render)
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });

@@ -11,6 +11,10 @@ export default function Signup() {
   const [message, setMessage] = useState("");
   const [lang, setLang] = useState("en"); // 🌍 پیش‌فرض: انگلیسی
 
+  // ✅ استفاده از متغیر محیطی برای آدرس API
+  const API_URL =
+    process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   // 🌐 ترجمه‌ها
   const texts = {
     en: {
@@ -60,7 +64,7 @@ export default function Signup() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("https://solarsmart-backend.onrender.com/api/register", {
+    fetch(`${API_URL}/api/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, gender }),

@@ -8,6 +8,10 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [lang, setLang] = useState("en"); // 🌍 زبان پیش‌فرض: انگلیسی
 
+  // آدرس بک‌اند از محیط (Vercel یا local)
+  const API_URL =
+    process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   // 🌐 ترجمه‌ها
   const texts = {
     en: {
@@ -48,7 +52,7 @@ export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    fetch("https://solarsmart-backend.onrender.com/api/login", {
+    fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -109,7 +113,9 @@ export default function Login() {
         </h2>
 
         {message && (
-          <div className="mb-3 text-center text-sm text-gray-700">{message}</div>
+          <div className="mb-3 text-center text-sm text-gray-700">
+            {message}
+          </div>
         )}
 
         <input
