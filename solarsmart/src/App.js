@@ -7,7 +7,8 @@ import {
 } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenu, HiX } from "react-icons/hi";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute"; 
+import AdminRoute from "./pages/AdminRoute";  // ✅ مسیر صحیح
 
 // 📄 صفحات پروژه
 import Home from "./pages/Home";
@@ -23,11 +24,16 @@ export default function App() {
   const [isLogoOpen, setIsLogoOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // وضعیت کاربر (از localStorage)
+  // وضعیت کاربر از localStorage
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
   });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("user");
+    if (saved) setUser(JSON.parse(saved));
+  }, []);
 
   // خروج کاربر
   const handleLogout = () => {
@@ -36,11 +42,6 @@ export default function App() {
     setUser(null);
     window.location.href = "/login";
   };
-
-  useEffect(() => {
-    const saved = localStorage.getItem("user");
-    if (saved) setUser(JSON.parse(saved));
-  }, []);
 
   // تعیین عکس آواتار بر اساس جنسیت
   const avatar =
@@ -75,7 +76,12 @@ export default function App() {
             <li><Link to="/calculator" className="hover:text-green-600">Calculator</Link></li>
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
             <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
-            <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
+
+            {/* ✅ فقط ادمین لینک داشبورد را می‌بیند */}
+            {user?.role === "admin" && (
+              <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
+            )}
+
             <li><Link to="/about" className="hover:text-green-600">About</Link></li>
           </ul>
 
@@ -90,9 +96,7 @@ export default function App() {
                     className="w-10 h-10 rounded-full border border-green-300 shadow-sm"
                   />
                   <div className="flex flex-col text-sm">
-                    <span className="font-semibold text-green-700">
-                      {user.name}
-                    </span>
+                    <span className="font-semibold text-green-700">{user.name}</span>
                     <span className="text-gray-500">
                       {user.gender === "female" ? "👩‍🦰" : "👨‍🦱"} {user.gender}
                     </span>
@@ -107,18 +111,8 @@ export default function App() {
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="text-green-700 hover:text-green-800 font-medium"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/signup"
-                  className="text-green-700 hover:text-green-800 font-medium"
-                >
-                  Signup
-                </Link>
+                <Link to="/login" className="text-green-700 hover:text-green-800 font-medium">Login</Link>
+                <Link to="/signup" className="text-green-700 hover:text-green-800 font-medium">Signup</Link>
               </>
             )}
           </div>
@@ -148,7 +142,12 @@ export default function App() {
               <Link to="/calculator" onClick={() => setIsMenuOpen(false)}>Calculator</Link>
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
               <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
-              <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+
+              {/* ✅ فقط ادمین */}
+              {user?.role === "admin" && (
+                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+              )}
+
               <Link to="/about" onClick={() => setIsMenuOpen(false)}>About</Link>
 
               {user ? (
@@ -172,6 +171,7 @@ export default function App() {
         <main className="p-4 sm:p-8">
           <Routes>
             <Route path="/" element={<Home />} />
+
             <Route
               path="/calculator"
               element={
@@ -180,19 +180,29 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <Dashboard />
+                </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
                 </ProtectedRoute>
               }
             />
+
             <Route path="/ideas" element={<EconomicIdeas />} />
-            <Route path="/users" element={<Users />} />
             <Route path="/about" element={<About />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login setUser={setUser} />} />
           </Routes>
         </main>
 

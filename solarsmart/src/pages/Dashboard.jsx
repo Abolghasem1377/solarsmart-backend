@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -6,7 +7,11 @@ export default function Dashboard() {
     latestUsers: [],
   });
   const [loading, setLoading] = useState(true);
-  const [lang, setLang] = useState("en"); // 🌍 default: English
+  const [error, setError] = useState(null);
+  const [lang, setLang] = useState("en");
+
+  // ✅ گرفتن آدرس بک‌اند از محیط
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
   const translations = {
     fa: {
@@ -14,6 +19,7 @@ export default function Dashboard() {
       totalUsers: "تعداد کل کاربران",
       latestUsers: "آخرین کاربران ثبت‌شده",
       loading: "⏳ در حال بارگذاری داشبورد...",
+      noUsers: "هیچ کاربری هنوز ثبت‌نام نکرده است.",
       footer:
         "این فقط شروعشه 😎 — می‌تونیم تولید انرژی خورشیدی، صرفه‌جویی مالی، و ROI رو هم اینجا نشون بدیم.",
     },
@@ -22,6 +28,7 @@ export default function Dashboard() {
       totalUsers: "Total Users",
       latestUsers: "Latest Registered Users",
       loading: "⏳ Loading dashboard...",
+      noUsers: "No users registered yet.",
       footer:
         "This is just the beginning 😎 — We can also show solar energy output, financial savings, and ROI here.",
     },
@@ -30,13 +37,14 @@ export default function Dashboard() {
       totalUsers: "Numărul total de utilizatori",
       latestUsers: "Cei mai recenți utilizatori înregistrați",
       loading: "⏳ Se încarcă tabloul de bord...",
+      noUsers: "Niciun utilizator nu este înregistrat încă.",
       footer:
         "Acesta este doar începutul 😎 — Putem adăuga producția de energie solară, economiile financiare și ROI aici.",
     },
   };
 
   useEffect(() => {
-    fetch("http://localhost:4000/api/stats")
+    fetch(`${API_URL}/api/stats`)
       .then((res) => res.json())
       .then((data) => {
         setStats(data);
@@ -44,9 +52,10 @@ export default function Dashboard() {
       })
       .catch((err) => {
         console.error("❌ Error fetching stats:", err);
+        setError("❌ Unable to load dashboard data.");
         setLoading(false);
       });
-  }, []);
+  }, [API_URL]);
 
   if (loading) {
     return (
@@ -56,9 +65,22 @@ export default function Dashboard() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-red-500 text-lg font-medium">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex flex-col items-center px-4 py-10 font-[Poppins]">
-      <div className="bg-white/90 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/40 w-full max-w-4xl">
+      <motion.div
+        className="bg-white/90 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/40 w-full max-w-4xl"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         {/* 🌍 Language selector */}
         <div className="flex justify-end mb-4">
           <select
@@ -76,36 +98,48 @@ export default function Dashboard() {
           {translations[lang].title}
         </h2>
 
-        {/* Cards */}
+        {/* 📦 Stats cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
-          <div className="bg-green-100 rounded-2xl p-6 shadow-inner border border-green-200 text-center">
+          <motion.div
+            className="bg-green-100 rounded-2xl p-6 shadow-inner border border-green-200 text-center"
+            whileHover={{ scale: 1.03 }}
+          >
             <div className="text-4xl font-extrabold text-green-700">
               {stats.totalUsers}
             </div>
             <div className="text-gray-700 mt-2 font-semibold">
               {translations[lang].totalUsers}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-blue-100 rounded-2xl p-6 shadow-inner border border-blue-200 text-center">
+          <motion.div
+            className="bg-blue-100 rounded-2xl p-6 shadow-inner border border-blue-200 text-center"
+            whileHover={{ scale: 1.03 }}
+          >
             <div className="text-xl font-bold text-blue-700 mb-2">
               {translations[lang].latestUsers}
             </div>
-            <ul className="text-left text-gray-700 text-sm space-y-1">
-              {stats.latestUsers.map((u) => (
-                <li key={u.id}>
-                  <b className="text-gray-900">{u.name}</b>{" "}
-                  <span className="text-gray-500">&lt;{u.email}&gt;</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+            {stats.latestUsers && stats.latestUsers.length > 0 ? (
+              <ul className="text-left text-gray-700 text-sm space-y-1">
+                {stats.latestUsers.map((u) => (
+                  <li key={u.id}>
+                    <b className="text-gray-900">{u.name}</b>{" "}
+                    <span className="text-gray-500">&lt;{u.email}&gt;</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 text-sm mt-2">
+                {translations[lang].noUsers}
+              </p>
+            )}
+          </motion.div>
         </div>
 
         <p className="text-center text-gray-500 text-xs">
           {translations[lang].footer}
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

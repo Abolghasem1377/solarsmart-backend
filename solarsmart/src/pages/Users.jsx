@@ -8,6 +8,7 @@ export default function Users() {
   // فرم
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("male");
 
   // حالت ادیت
   const [editId, setEditId] = useState(null);
@@ -15,18 +16,21 @@ export default function Users() {
   // پیام وضعیت
   const [message, setMessage] = useState("");
 
+  // ✅ آدرس بک‌اند از متغیر محیطی
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   // گرفتن لیست کاربران
-  const fetchUsers = () => {
-    fetch("http://localhost:4000/api/users")
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("❌ Error fetching users:", err);
-        setLoading(false);
-      });
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/users`);
+      const data = await res.json();
+      setUsers(data);
+    } catch (err) {
+      console.error("❌ Error fetching users:", err);
+      setMessage("❌ Server connection error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -34,69 +38,63 @@ export default function Users() {
   }, []);
 
   // ثبت یا آپدیت کاربر
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!name.trim() || !email.trim()) {
-      setMessage("⚠️ نام و ایمیل لازم است");
+      setMessage("⚠️ Name and email are required.");
       return;
     }
 
-    // اگر editId داریم یعنی در حالت ویرایش هستیم
-    if (editId !== null) {
-      fetch(`http://localhost:4000/api/users/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessage("✅ کاربر ویرایش شد");
-          setEditId(null);
-          setName("");
-          setEmail("");
-          fetchUsers();
-        })
-        .catch((err) => {
-          console.error("❌ Update error:", err);
-          setMessage("❌ خطا در ویرایش");
+    try {
+      if (editId !== null) {
+        // ویرایش کاربر
+        await fetch(`${API_URL}/api/users/${editId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, gender }),
         });
-    } else {
-      // حالت ایجاد کاربر جدید
-      fetch("http://localhost:4000/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setMessage("✅ کاربر اضافه شد");
-          setName("");
-          setEmail("");
-          fetchUsers();
-        })
-        .catch((err) => {
-          console.error("❌ Insert error:", err);
-          setMessage("❌ خطا در افزودن");
+        setMessage("✅ User updated successfully!");
+      } else {
+        // افزودن کاربر جدید (فقط در صورت وجود endpoint در سرور)
+        await fetch(`${API_URL}/api/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            password: "123456",
+            gender,
+          }),
         });
+        setMessage("✅ New user created successfully!");
+      }
+
+      setName("");
+      setEmail("");
+      setGender("male");
+      setEditId(null);
+      fetchUsers();
+    } catch (err) {
+      console.error("❌ Save error:", err);
+      setMessage("❌ Error saving user.");
     }
   };
 
   // حذف کاربر
-  const handleDelete = (id) => {
-    if (!window.confirm("واقعا حذف بشه؟")) return;
-    fetch(`http://localhost:4000/api/users/${id}`, {
-      method: "DELETE",
-    })
-      .then((res) => res.json())
-      .then(() => {
-        setMessage("🗑️ کاربر حذف شد");
-        fetchUsers();
-      })
-      .catch((err) => {
-        console.error("❌ Delete error:", err);
-        setMessage("❌ خطا در حذف");
+  const handleDelete = async (id) => {
+    if (!window.confirm("❗ Are you sure you want to delete this user?")) return;
+
+    try {
+      await fetch(`${API_URL}/api/users/${id}`, {
+        method: "DELETE",
       });
+      setMessage("🗑️ User deleted successfully!");
+      fetchUsers();
+    } catch (err) {
+      console.error("❌ Delete error:", err);
+      setMessage("❌ Error deleting user.");
+    }
   };
 
   // پر کردن فرم برای ویرایش
@@ -104,13 +102,14 @@ export default function Users() {
     setEditId(user.id);
     setName(user.name);
     setEmail(user.email);
-    setMessage("✏️ در حالت ویرایش هستید");
+    setGender(user.gender || "male");
+    setMessage("✏️ Edit mode enabled");
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center text-xl text-gray-600">
-        ⏳ در حال بارگذاری اطلاعات کاربران...
+        ⏳ Loading users...
       </div>
     );
   }
@@ -118,13 +117,13 @@ export default function Users() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-sky-50 to-blue-100 flex flex-col items-center px-4 py-10 font-[Poppins]">
       <motion.div
-        className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/40 w-full max-w-4xl"
+        className="bg-white/90 backdrop-blur-lg p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/40 w-full max-w-5xl"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
         <h2 className="text-3xl font-bold text-green-700 mb-6 text-center">
-          👥 مدیریت کاربران
+          👥 User Management
         </h2>
 
         {/* پیام وضعیت */}
@@ -137,36 +136,48 @@ export default function Users() {
         {/* فرم افزودن / ویرایش */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl border border-green-100 shadow-inner p-5 mb-8 grid grid-cols-1 sm:grid-cols-4 gap-4"
+          className="bg-white rounded-2xl border border-green-100 shadow-inner p-5 mb-8 grid grid-cols-1 sm:grid-cols-5 gap-4"
         >
           <div className="sm:col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">نام</label>
+            <label className="block text-sm text-gray-600 mb-1">Name</label>
             <input
               type="text"
               className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400 outline-none"
-              placeholder="مثلا Ali Reza"
+              placeholder="Ali Reza"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-sm text-gray-600 mb-1">ایمیل</label>
+            <label className="block text-sm text-gray-600 mb-1">Email</label>
             <input
               type="email"
               className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400 outline-none"
-              placeholder="مثلا ali@example.com"
+              placeholder="ali@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
-          <div className="sm:col-span-4 flex flex-col sm:flex-row gap-3 justify-end">
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Gender</label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-green-400 outline-none"
+            >
+              <option value="male">👨 Male</option>
+              <option value="female">👩 Female</option>
+            </select>
+          </div>
+
+          <div className="sm:col-span-5 flex flex-col sm:flex-row gap-3 justify-end mt-2">
             <button
               type="submit"
               className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl px-6 py-2 shadow"
             >
-              {editId !== null ? "✔️ ذخیره ویرایش" : "➕ افزودن کاربر"}
+              {editId !== null ? "✔️ Save Changes" : "➕ Add User"}
             </button>
 
             {editId !== null && (
@@ -176,11 +187,12 @@ export default function Users() {
                   setEditId(null);
                   setName("");
                   setEmail("");
-                  setMessage("لغو ویرایش");
+                  setGender("male");
+                  setMessage("✖️ Edit cancelled");
                 }}
                 className="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl px-6 py-2 shadow"
               >
-                ❌ لغو
+                ❌ Cancel
               </button>
             )}
           </div>
@@ -188,13 +200,14 @@ export default function Users() {
 
         {/* جدول کاربران */}
         <div className="overflow-x-auto rounded-xl border border-green-100 shadow">
-          <table className="w-full text-left min-w-[500px]">
+          <table className="w-full text-left min-w-[600px]">
             <thead className="bg-green-600 text-white">
               <tr>
                 <th className="p-3">ID</th>
-                <th className="p-3">نام</th>
-                <th className="p-3">ایمیل</th>
-                <th className="p-3 text-center">عملیات</th>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Gender</th>
+                <th className="p-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white">
@@ -204,22 +217,21 @@ export default function Users() {
                   className="border-b last:border-none hover:bg-green-50 transition"
                 >
                   <td className="p-3">{u.id}</td>
-                  <td className="p-3 font-semibold text-green-800">
-                    {u.name}
-                  </td>
+                  <td className="p-3 font-semibold text-green-800">{u.name}</td>
                   <td className="p-3 text-gray-600">{u.email}</td>
+                  <td className="p-3 text-gray-700 capitalize">{u.gender}</td>
                   <td className="p-3 text-center flex flex-col sm:flex-row gap-2 justify-center">
                     <button
                       onClick={() => startEdit(u)}
                       className="px-4 py-2 rounded-lg text-sm font-semibold bg-yellow-400/90 hover:bg-yellow-400 text-gray-800 shadow"
                     >
-                      ✏️ ویرایش
+                      ✏️ Edit
                     </button>
                     <button
                       onClick={() => handleDelete(u.id)}
                       className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 text-white hover:bg-red-600 shadow"
                     >
-                      🗑️ حذف
+                      🗑️ Delete
                     </button>
                   </td>
                 </tr>

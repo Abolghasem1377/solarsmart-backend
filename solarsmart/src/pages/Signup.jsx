@@ -9,13 +9,12 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [gender, setGender] = useState("male");
   const [message, setMessage] = useState("");
-  const [lang, setLang] = useState("en"); // 🌍 پیش‌فرض: انگلیسی
+  const [lang, setLang] = useState("en");
 
-  // ✅ استفاده از متغیر محیطی برای آدرس API
-  const API_URL =
-    process.env.REACT_APP_API_URL || "http://localhost:4000";
+  // 🌐 آدرس بک‌اند (Render یا Local)
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
 
-  // 🌐 ترجمه‌ها
+  // 🌍 ترجمه‌ها
   const texts = {
     en: {
       title: "🧍 New User Registration",
@@ -27,7 +26,7 @@ export default function Signup() {
       signup: "Sign Up",
       hasAccount: "Already have an account?",
       login: "Login",
-      success: "✅ Registered successfully!",
+      success: "✅ Registered successfully! Redirecting to login...",
       fail: "❌ Error during registration",
       serverError: "❌ Server connection error",
     },
@@ -41,7 +40,7 @@ export default function Signup() {
       signup: "ثبت‌نام",
       hasAccount: "حساب داری؟",
       login: "ورود",
-      success: "✅ ثبت‌نام با موفقیت انجام شد!",
+      success: "✅ ثبت‌نام با موفقیت انجام شد! انتقال به صفحه ورود...",
       fail: "❌ خطا در ثبت‌نام",
       serverError: "❌ خطا در ارتباط با سرور",
     },
@@ -55,30 +54,35 @@ export default function Signup() {
       signup: "Sabt nam",
       hasAccount: "Hesab dari?",
       login: "Vorood",
-      success: "✅ Sabt nam ba movafaghiat anjam shod!",
+      success: "✅ Sabt nam ba movafaghiat anjam shod! Dar hale enteghal...",
       fail: "❌ Khata dar sabt nam",
       serverError: "❌ Khatâ dar ertebat bâ server",
     },
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    fetch(`${API_URL}/api/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, gender }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) {
-          setMessage("❌ " + data.error);
-        } else {
-          setMessage(texts[lang].success);
-          setTimeout(() => navigate("/login"), 1200);
-        }
-      })
-      .catch(() => setMessage(texts[lang].serverError));
+    try {
+      const res = await fetch(`${API_URL}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password, gender }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && !data.error) {
+        setMessage(texts[lang].success);
+        // 🕓 هدایت خودکار به صفحه لاگین بعد از 1.5 ثانیه
+        setTimeout(() => navigate("/login"), 1500);
+      } else {
+        setMessage(data.error ? `❌ ${data.error}` : texts[lang].fail);
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      setMessage(texts[lang].serverError);
+    }
   };
 
   return (
@@ -89,33 +93,18 @@ export default function Signup() {
       >
         {/* 🌍 انتخاب زبان */}
         <div className="absolute top-4 right-4 flex space-x-2">
-          <button
-            type="button"
-            onClick={() => setLang("en")}
-            className={`text-sm px-2 py-1 rounded ${
-              lang === "en" ? "bg-green-600 text-white" : "bg-gray-100"
-            }`}
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            onClick={() => setLang("fa")}
-            className={`text-sm px-2 py-1 rounded ${
-              lang === "fa" ? "bg-green-600 text-white" : "bg-gray-100"
-            }`}
-          >
-            فارسی
-          </button>
-          <button
-            type="button"
-            onClick={() => setLang("ro")}
-            className={`text-sm px-2 py-1 rounded ${
-              lang === "ro" ? "bg-green-600 text-white" : "bg-gray-100"
-            }`}
-          >
-            Roman
-          </button>
+          {["en", "fa", "ro"].map((code) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => setLang(code)}
+              className={`text-sm px-2 py-1 rounded ${
+                lang === code ? "bg-green-600 text-white" : "bg-gray-100"
+              }`}
+            >
+              {code === "en" ? "EN" : code === "fa" ? "فارسی" : "Roman"}
+            </button>
+          ))}
         </div>
 
         <h2 className="text-2xl font-bold text-center text-green-700 mb-6 mt-6">
@@ -160,37 +149,25 @@ export default function Signup() {
 
         {/* 🚻 انتخاب جنسیت */}
         <div className="flex justify-center gap-6 mb-6">
-          <label
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border transition-all ${
-              gender === "male"
-                ? "bg-green-100 border-green-400 text-green-700 shadow-inner"
-                : "bg-gray-50 border-gray-300 text-gray-600"
-            }`}
-            onClick={() => setGender("male")}
-          >
-            <img
-              src="/images/avatar_male.png"
-              alt="Male"
-              className="w-8 h-8 rounded-full"
-            />
-            <span>{texts[lang].male}</span>
-          </label>
-
-          <label
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border transition-all ${
-              gender === "female"
-                ? "bg-pink-100 border-pink-400 text-pink-700 shadow-inner"
-                : "bg-gray-50 border-gray-300 text-gray-600"
-            }`}
-            onClick={() => setGender("female")}
-          >
-            <img
-              src="/images/avatar_female.png"
-              alt="Female"
-              className="w-8 h-8 rounded-full"
-            />
-            <span>{texts[lang].female}</span>
-          </label>
+          {[
+            { value: "male", label: texts[lang].male, img: "/images/avatar_male.png" },
+            { value: "female", label: texts[lang].female, img: "/images/avatar_female.png" },
+          ].map((opt) => (
+            <label
+              key={opt.value}
+              onClick={() => setGender(opt.value)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer border transition-all ${
+                gender === opt.value
+                  ? opt.value === "male"
+                    ? "bg-green-100 border-green-400 text-green-700 shadow-inner"
+                    : "bg-pink-100 border-pink-400 text-pink-700 shadow-inner"
+                  : "bg-gray-50 border-gray-300 text-gray-600"
+              }`}
+            >
+              <img src={opt.img} alt={opt.label} className="w-8 h-8 rounded-full" />
+              <span>{opt.label}</span>
+            </label>
+          ))}
         </div>
 
         {/* دکمه ثبت‌نام */}
