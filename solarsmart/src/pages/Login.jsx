@@ -8,10 +8,9 @@ export default function Login({ setUser }) {
   const [message, setMessage] = useState("");
   const [lang, setLang] = useState("en");
 
-  // 📡 آدرس سرور بک‌اند
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+  // ✅ برای جلوگیری از مشکل .env، فعلاً API رو مستقیم گذاشتم
+  const API_URL = "https://solarsmart-backend-new.onrender.com";
 
-  // 🌍 ترجمه‌ها
   const texts = {
     en: {
       title: "🔐 Login to your account",
@@ -38,43 +37,60 @@ export default function Login({ setUser }) {
     ro: {
       title: "🔐 Vorood be hesab",
       email: "Email",
-      password: "Ramz oboor",
-      login: "Vorood",
-      noAccount: "Hesab nadari?",
-      signup: "Sabt nam",
-      success: "✅ Vorood ba movafaghiat anjam shod!",
-      fail: "❌ Email ya ramz eshtebah ast.",
-      serverError: "❌ Khatâ dar ertebat bâ server",
+      password: "Parolă",
+      login: "Intră",
+      noAccount: "Nu ai cont?",
+      signup: "Înregistrează-te",
+      success: "✅ Logare reușită!",
+      fail: "❌ Email sau parolă greșită.",
+      serverError: "❌ Eroare server",
     },
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    console.log("📌 Login clicked");
+    console.log("📡 Sending request to:", `${API_URL}/api/login`);
+
     fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log("📨 Raw response:", res);
+        return res.json();
+      })
       .then((data) => {
-        if (data.token) {
-          // ذخیره در localStorage
+        console.log("✅ Server response:", data);
+
+        if (data?.token) {
           localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
 
-          // 🔥 بروزرسانی وضعیت در App.js
           if (setUser) setUser(data.user);
 
           setMessage(texts[lang].success);
 
-          // هدایت به داشبورد یا ماشین حساب
-          setTimeout(() => navigate("/dashboard"), 1000);
+          setTimeout(() => {
+            if (data.user.role === "admin") {
+              console.log("👑 Admin → redirecting to dashboard");
+              navigate("/dashboard");
+            } else {
+              console.log("👤 User → redirecting to calculator");
+              navigate("/calculator");
+            }
+          }, 1000);
         } else {
+          console.warn("⚠️ Login failed:", data);
           setMessage(texts[lang].fail);
         }
       })
-      .catch(() => setMessage(texts[lang].serverError));
+      .catch((err) => {
+        console.error("❌ Fetch Error:", err);
+        setMessage(texts[lang].serverError);
+      });
   };
 
   return (
@@ -83,7 +99,7 @@ export default function Login({ setUser }) {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md relative"
       >
-        {/* 🌍 انتخاب زبان */}
+        {/* 🌍 Language Selector */}
         <div className="absolute top-4 right-4 flex space-x-2">
           {["en", "fa", "ro"].map((code) => (
             <button
@@ -94,7 +110,7 @@ export default function Login({ setUser }) {
                 lang === code ? "bg-green-600 text-white" : "bg-gray-100"
               }`}
             >
-              {code === "en" ? "EN" : code === "fa" ? "فارسی" : "Roman"}
+              {code === "en" ? "EN" : code === "fa" ? "فارسی" : "RO"}
             </button>
           ))}
         </div>
