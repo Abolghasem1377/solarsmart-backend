@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenu, HiX } from "react-icons/hi";
 import ProtectedRoute from "./components/ProtectedRoute"; 
-import AdminRoute from "./pages/AdminRoute";
+import AdminRoute from "./pages/AdminRoute";  // ✅ مسیر صحیح
 
 // 📄 صفحات پروژه
 import Home from "./pages/Home";
@@ -77,6 +77,7 @@ export default function App() {
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
             <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
 
+            {/* ✅ فقط ادمین لینک داشبورد را می‌بیند */}
             {user?.role === "admin" && (
               <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
             )}
@@ -142,6 +143,7 @@ export default function App() {
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
               <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
 
+              {/* ✅ فقط ادمین */}
               {user?.role === "admin" && (
                 <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               )}
@@ -208,24 +210,6 @@ export default function App() {
         <footer className="text-center py-6 text-gray-600 bg-white/60 backdrop-blur-md border-t border-green-100 text-sm sm:text-base">
           © 2025 SolarSmart | Built with 🌿 React + TailwindCSS + Framer Motion
         </footer>
-
-        {/* ✅ Modal نمایش لوگو */}
-        {isLogoOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[99999]"
-            onClick={() => setIsLogoOpen(false)}
-          >
-            <motion.img
-              src="/images/logo.png"
-              alt="Logo Large"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-72 h-72 sm:w-96 sm:h-96 rounded-2xl border-4 border-white shadow-2xl"
-            />
-          </div>
-        )}
       </div>
     </Router>
   );
