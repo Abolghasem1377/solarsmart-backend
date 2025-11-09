@@ -7,10 +7,10 @@ import {
 } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenu, HiX } from "react-icons/hi";
-import ProtectedRoute from "./components/ProtectedRoute"; 
+import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./pages/AdminRoute";
 
-// 📄 صفحات پروژه
+// صفحات
 import Home from "./pages/Home";
 import Calculator from "./pages/Calculator";
 import About from "./pages/About";
@@ -21,7 +21,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 
 export default function App() {
-  const [isLogoOpen, setIsLogoOpen] = useState(false);
+  const [isLogoOpen, setIsLogoOpen] = useState(false); // ✅ حالا استفاده می‌شود
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // وضعیت کاربر از localStorage
@@ -43,7 +43,6 @@ export default function App() {
     window.location.href = "/login";
   };
 
-  // تعیین عکس آواتار بر اساس جنسیت
   const avatar =
     user?.gender === "female"
       ? "/images/avatar_female.png"
@@ -52,12 +51,12 @@ export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 text-gray-800 font-sans relative overflow-hidden">
-        {/* 🌞 Navbar */}
+        {/* Navbar */}
         <nav className="flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 bg-white shadow-md backdrop-blur-sm border-b border-green-100 relative z-20">
-          {/* 🖼️ لوگو */}
+          {/* لوگو */}
           <div
             className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer"
-            onClick={() => setIsLogoOpen(true)}
+            onClick={() => setIsLogoOpen(true)} // ✅ باز کردن مودال
           >
             <motion.img
               src="/images/logo.png"
@@ -70,21 +69,19 @@ export default function App() {
             </span>
           </div>
 
-          {/* 🔗 منوی دسکتاپ */}
+          {/* منوی دسکتاپ */}
           <ul className="hidden md:flex space-x-6 text-lg font-medium">
             <li><Link to="/" className="hover:text-green-600">Home</Link></li>
             <li><Link to="/calculator" className="hover:text-green-600">Calculator</Link></li>
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
             <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
-
             {user?.role === "admin" && (
               <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
             )}
-
             <li><Link to="/about" className="hover:text-green-600">About</Link></li>
           </ul>
 
-          {/* 👤 وضعیت کاربر */}
+          {/* وضعیت کاربر */}
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <>
@@ -116,7 +113,7 @@ export default function App() {
             )}
           </div>
 
-          {/* 🍔 منوی موبایل */}
+          {/* منوی موبایل */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -127,7 +124,7 @@ export default function App() {
           </div>
         </nav>
 
-        {/* 📱 منوی موبایل */}
+        {/* منوی موبایل */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
@@ -141,13 +138,10 @@ export default function App() {
               <Link to="/calculator" onClick={() => setIsMenuOpen(false)}>Calculator</Link>
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
               <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
-
               {user?.role === "admin" && (
                 <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               )}
-
               <Link to="/about" onClick={() => setIsMenuOpen(false)}>About</Link>
-
               {user ? (
                 <button
                   onClick={handleLogout}
@@ -165,11 +159,10 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* 🧩 صفحات */}
+        {/* صفحات */}
         <main className="p-4 sm:p-8">
           <Routes>
             <Route path="/" element={<Home />} />
-
             <Route
               path="/calculator"
               element={
@@ -178,7 +171,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/dashboard"
               element={
@@ -187,7 +179,6 @@ export default function App() {
                 </AdminRoute>
               }
             />
-
             <Route
               path="/users"
               element={
@@ -196,7 +187,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route path="/ideas" element={<EconomicIdeas />} />
             <Route path="/about" element={<About />} />
             <Route path="/signup" element={<Signup />} />
@@ -204,28 +194,34 @@ export default function App() {
           </Routes>
         </main>
 
-        {/* 🌿 Footer */}
+        {/* Footer */}
         <footer className="text-center py-6 text-gray-600 bg-white/60 backdrop-blur-md border-t border-green-100 text-sm sm:text-base">
           © 2025 SolarSmart | Built with 🌿 React + TailwindCSS + Framer Motion
         </footer>
 
-        {/* ✅ Modal نمایش لوگو */}
-        {isLogoOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-[99999]"
-            onClick={() => setIsLogoOpen(false)}
-          >
-            <motion.img
-              src="/images/logo.png"
-              alt="Logo Large"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="w-72 h-72 sm:w-96 sm:h-96 rounded-2xl border-4 border-white shadow-2xl"
-            />
-          </div>
-        )}
+        {/* ✅ Modal لوگو – استفاده از isLogoOpen */}
+        <AnimatePresence>
+          {isLogoOpen && (
+            <motion.div
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-[99999]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsLogoOpen(false)}
+            >
+              <motion.img
+                src="/images/logo.png"
+                alt="Logo Large"
+                initial={{ scale: 0.7 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.9 }}
+                transition={{ duration: 0.25 }}
+                className="w-72 h-72 sm:w-96 sm:h-96 rounded-2xl border-4 border-white shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Router>
   );
