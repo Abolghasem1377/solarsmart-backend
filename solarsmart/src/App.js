@@ -21,10 +21,9 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 
 export default function App() {
-  const [isLogoOpen, setIsLogoOpen] = useState(false); // ✅ حالا استفاده می‌شود
+  const [isLogoOpen, setIsLogoOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // وضعیت کاربر از localStorage
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
@@ -35,7 +34,6 @@ export default function App() {
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
-  // خروج کاربر
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -51,12 +49,14 @@ export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 text-gray-800 font-sans relative overflow-hidden">
+        
         {/* Navbar */}
         <nav className="flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 bg-white shadow-md backdrop-blur-sm border-b border-green-100 relative z-20">
+          
           {/* لوگو */}
           <div
             className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer"
-            onClick={() => setIsLogoOpen(true)} // ✅ باز کردن مودال
+            onClick={() => setIsLogoOpen(true)}
           >
             <motion.img
               src="/images/logo.png"
@@ -72,12 +72,20 @@ export default function App() {
           {/* منوی دسکتاپ */}
           <ul className="hidden md:flex space-x-6 text-lg font-medium">
             <li><Link to="/" className="hover:text-green-600">Home</Link></li>
+
             <li><Link to="/calculator" className="hover:text-green-600">Calculator</Link></li>
+
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
-            <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
+
+            {/* ✅ فقط ادمین می‌بیند */}
+            {user?.role === "admin" && (
+              <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
+            )}
+
             {user?.role === "admin" && (
               <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
             )}
+
             <li><Link to="/about" className="hover:text-green-600">About</Link></li>
           </ul>
 
@@ -137,11 +145,18 @@ export default function App() {
               <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
               <Link to="/calculator" onClick={() => setIsMenuOpen(false)}>Calculator</Link>
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
-              <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
+
+              {/* ✅ فقط ادمین */}
+              {user?.role === "admin" && (
+                <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
+              )}
+
               {user?.role === "admin" && (
                 <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               )}
+
               <Link to="/about" onClick={() => setIsMenuOpen(false)}>About</Link>
+
               {user ? (
                 <button
                   onClick={handleLogout}
@@ -163,6 +178,7 @@ export default function App() {
         <main className="p-4 sm:p-8">
           <Routes>
             <Route path="/" element={<Home />} />
+
             <Route
               path="/calculator"
               element={
@@ -171,6 +187,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* ✅ فقط ادمین می‌تواند وارد داشبورد شود */}
             <Route
               path="/dashboard"
               element={
@@ -179,14 +197,17 @@ export default function App() {
                 </AdminRoute>
               }
             />
+
+            {/* ✅ فقط ادمین می‌تواند صفحه Users را ببیند */}
             <Route
               path="/users"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <Users />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
+
             <Route path="/ideas" element={<EconomicIdeas />} />
             <Route path="/about" element={<About />} />
             <Route path="/signup" element={<Signup />} />
@@ -199,7 +220,7 @@ export default function App() {
           © 2025 SolarSmart | Built with 🌿 React + TailwindCSS + Framer Motion
         </footer>
 
-        {/* ✅ Modal لوگو – استفاده از isLogoOpen */}
+        {/* Modal لوگو */}
         <AnimatePresence>
           {isLogoOpen && (
             <motion.div
