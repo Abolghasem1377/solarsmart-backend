@@ -7,21 +7,24 @@ import {
 } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HiMenu, HiX } from "react-icons/hi";
-import ProtectedRoute from "./components/ProtectedRoute";
-import AdminRoute from "./pages/AdminRoute";
+import ProtectedRoute from "./components/ProtectedRoute"; 
+import AdminRoute from "./pages/AdminRoute";  // ✅ مسیر صحیح
 
 // 📄 صفحات پروژه
 import Home from "./pages/Home";
 import Calculator from "./pages/Calculator";
 import About from "./pages/About";
 import EconomicIdeas from "./pages/EconomicIdeas";
+import Users from "./pages/Users";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 
 export default function App() {
+  const [isLogoOpen, setIsLogoOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // وضعیت کاربر از localStorage
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("user");
     return saved ? JSON.parse(saved) : null;
@@ -32,6 +35,7 @@ export default function App() {
     if (saved) setUser(JSON.parse(saved));
   }, []);
 
+  // خروج کاربر
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -39,6 +43,7 @@ export default function App() {
     window.location.href = "/login";
   };
 
+  // تعیین عکس آواتار بر اساس جنسیت
   const avatar =
     user?.gender === "female"
       ? "/images/avatar_female.png"
@@ -47,12 +52,13 @@ export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 text-gray-800 font-sans relative overflow-hidden">
-
         {/* 🌞 Navbar */}
         <nav className="flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 bg-white shadow-md backdrop-blur-sm border-b border-green-100 relative z-20">
-
-          {/* 🖼️ Logo */}
-          <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
+          {/* 🖼️ لوگو */}
+          <div
+            className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer"
+            onClick={() => setIsLogoOpen(true)}
+          >
             <motion.img
               src="/images/logo.png"
               alt="SolarSmart Logo"
@@ -64,13 +70,14 @@ export default function App() {
             </span>
           </div>
 
-          {/* 🔗 Desktop Menu */}
+          {/* 🔗 منوی دسکتاپ */}
           <ul className="hidden md:flex space-x-6 text-lg font-medium">
             <li><Link to="/" className="hover:text-green-600">Home</Link></li>
             <li><Link to="/calculator" className="hover:text-green-600">Calculator</Link></li>
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
+            <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
 
-            {/* ✅ فقط Admin می‌بیند */}
+            {/* ✅ فقط ادمین لینک داشبورد را می‌بیند */}
             {user?.role === "admin" && (
               <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
             )}
@@ -78,7 +85,7 @@ export default function App() {
             <li><Link to="/about" className="hover:text-green-600">About</Link></li>
           </ul>
 
-          {/* 👤 User Box */}
+          {/* 👤 وضعیت کاربر */}
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <>
@@ -110,7 +117,7 @@ export default function App() {
             )}
           </div>
 
-          {/* 🍔 Mobile Menu Button */}
+          {/* 🍔 منوی موبایل */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -121,7 +128,7 @@ export default function App() {
           </div>
         </nav>
 
-        {/* 📱 Mobile Menu */}
+        {/* 📱 منوی موبایل */}
         <AnimatePresence>
           {isMenuOpen && (
             <motion.div
@@ -134,7 +141,9 @@ export default function App() {
               <Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
               <Link to="/calculator" onClick={() => setIsMenuOpen(false)}>Calculator</Link>
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
+              <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
 
+              {/* ✅ فقط ادمین */}
               {user?.role === "admin" && (
                 <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
               )}
@@ -158,7 +167,7 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* 🧩 Pages */}
+        {/* 🧩 صفحات */}
         <main className="p-4 sm:p-8">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -178,6 +187,15 @@ export default function App() {
                 <AdminRoute>
                   <Dashboard />
                 </AdminRoute>
+              }
+            />
+
+            <Route
+              path="/users"
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
               }
             />
 
