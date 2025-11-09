@@ -20,7 +20,6 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 
 export default function App() {
-  const [isLogoOpen, setIsLogoOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const [user, setUser] = useState(() => {
@@ -53,10 +52,7 @@ export default function App() {
         <nav className="flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 bg-white shadow-md backdrop-blur-sm border-b border-green-100 relative z-20">
 
           {/* 🖼️ Logo */}
-          <div
-            className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer"
-            onClick={() => setIsLogoOpen(true)}
-          >
+          <div className="flex items-center space-x-2 sm:space-x-3 group cursor-pointer">
             <motion.img
               src="/images/logo.png"
               alt="SolarSmart Logo"
