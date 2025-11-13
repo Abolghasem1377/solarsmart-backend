@@ -8,7 +8,7 @@ export default function Login({ setUser }) {
   const [message, setMessage] = useState("");
   const [lang, setLang] = useState("en");
 
-  // ✅ برای جلوگیری از مشکل .env، فعلاً API رو مستقیم گذاشتم
+  // Backend URL
   const API_URL = "https://solarsmart-backend-new.onrender.com";
 
   const texts = {
@@ -50,47 +50,36 @@ export default function Login({ setUser }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    console.log("📌 Login clicked");
-    console.log("📡 Sending request to:", `${API_URL}/api/login`);
-
     fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     })
-      .then((res) => {
-        console.log("📨 Raw response:", res);
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        console.log("✅ Server response:", data);
-
         if (data?.token) {
+          // ذخیره توکن و کاربر
           localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
+
+          // ذخیره آخرین ورود
+          if (data.user.last_login) {
+            localStorage.setItem("last_login", data.user.last_login);
+          }
 
           if (setUser) setUser(data.user);
 
           setMessage(texts[lang].success);
 
           setTimeout(() => {
-            if (data.user.role === "admin") {
-              console.log("👑 Admin → redirecting to dashboard");
-              navigate("/dashboard");
-            } else {
-              console.log("👤 User → redirecting to calculator");
-              navigate("/calculator");
-            }
-          }, 1000);
+            if (data.user.role === "admin") navigate("/dashboard");
+            else navigate("/calculator");
+          }, 900);
         } else {
-          console.warn("⚠️ Login failed:", data);
           setMessage(texts[lang].fail);
         }
       })
-      .catch((err) => {
-        console.error("❌ Fetch Error:", err);
-        setMessage(texts[lang].serverError);
-      });
+      .catch(() => setMessage(texts[lang].serverError));
   };
 
   return (
@@ -99,7 +88,7 @@ export default function Login({ setUser }) {
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md relative"
       >
-        {/* 🌍 Language Selector */}
+        {/* Language Switch */}
         <div className="absolute top-4 right-4 flex space-x-2">
           {["en", "fa", "ro"].map((code) => (
             <button

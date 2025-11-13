@@ -5,32 +5,33 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  // 🔥 لینک واقعی Render
   const BACKEND_URL = "https://solarsmart-backend-new.onrender.com";
 
   useEffect(() => {
     const controller = new AbortController();
 
-    const load = async () => {
+    const loadUsers = async () => {
       try {
         setLoading(true);
         setErr("");
 
+        // 🛑 فقط ادمین اجازه دسترسی دارد
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const token = localStorage.getItem("token");
 
         if (!user || user.role !== "admin") {
-          setErr("Access denied: admin only 🚫");
+          setErr("❌ Access denied: admin only");
           setLoading(false);
           return;
         }
 
         if (!token) {
-          setErr("No token found! Login again.");
+          setErr("❌ No token found. Please login again.");
           setLoading(false);
           return;
         }
 
+        // 📡 درخواست به بک‌اند واقعی
         const res = await fetch(`${BACKEND_URL}/api/users`, {
           method: "GET",
           headers: {
@@ -47,21 +48,22 @@ export default function Users() {
 
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);
+
       } catch (e) {
-        if (e.name !== "AbortError") {
-          console.error("❌ Users load error:", e);
-          setErr(e.message || "Failed to load users");
-        }
+        console.error("❌ Users load error:", e);
+        if (e.name !== "AbortError") setErr(e.message);
       } finally {
         setLoading(false);
       }
     };
 
-    load();
+    loadUsers();
     return () => controller.abort();
   }, []);
 
-  // ---------------------------- UI ---------------------------- //
+  // -----------------------------------
+  //          UI SECTION
+  // -----------------------------------
 
   if (loading)
     return (
@@ -73,7 +75,7 @@ export default function Users() {
   if (err)
     return (
       <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow text-center text-red-600">
-        ❌ {err}
+        {err}
       </div>
     );
 
@@ -84,23 +86,8 @@ export default function Users() {
       </div>
     );
 
-  // ⏰ تبدیل زمان UTC به Europe/Bucharest
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-
-    return new Date(dateString).toLocaleString("en-GB", {
-      timeZone: "Europe/Bucharest",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow">
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow">
       <h1 className="text-2xl font-bold text-green-700 mb-4 text-center">
         👥 Registered Users
       </h1>
@@ -114,7 +101,7 @@ export default function Users() {
               <th className="py-3 pr-4">Email</th>
               <th className="py-3 pr-4">Gender</th>
               <th className="py-3 pr-4">Role</th>
-              <th className="py-3 pr-4">Last Login 🇷🇴</th>
+              <th className="py-3 pr-4">Last Login</th>
             </tr>
           </thead>
 
@@ -125,10 +112,14 @@ export default function Users() {
                 <td className="py-2 pr-4">{u.name}</td>
                 <td className="py-2 pr-4">{u.email}</td>
                 <td className="py-2 pr-4 capitalize">{u.gender}</td>
-                <td className="py-2 pr-4">{u.role || "user"}</td>
+                <td className="py-2 pr-4 uppercase">{u.role}</td>
 
-                {/* ⏰ نمایش زمان آخرین ورود به ساعت رومانی */}
-                <td className="py-2 pr-4">{formatDate(u.last_login)}</td>
+                {/* 🔥 نمایش آخرین ورود */}
+                <td className="py-2 pr-4">
+                  {u.last_login
+                    ? new Date(u.last_login).toLocaleString("ro-RO")
+                    : "—"}
+                </td>
               </tr>
             ))}
           </tbody>
