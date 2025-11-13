@@ -4,6 +4,8 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [expandedUser, setExpandedUser] = useState(null); // 🔥 نمایش تاریخچه ورود کاربر
+  const [loginLogs, setLoginLogs] = useState([]); // 🔥 ذخیره تاریخچه ورود
 
   const BACKEND_URL = "https://solarsmart-backend-new.onrender.com";
 
@@ -15,7 +17,6 @@ export default function Users() {
         setLoading(true);
         setErr("");
 
-        // 🛑 فقط ادمین اجازه دسترسی دارد
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const token = localStorage.getItem("token");
 
@@ -31,9 +32,7 @@ export default function Users() {
           return;
         }
 
-        // 📡 درخواست به بک‌اند واقعی
         const res = await fetch(`${BACKEND_URL}/api/users`, {
-          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -41,14 +40,10 @@ export default function Users() {
           signal: controller.signal,
         });
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text || res.statusText);
-        }
+        if (!res.ok) throw new Error(await res.text());
 
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);
-
       } catch (e) {
         console.error("❌ Users load error:", e);
         if (e.name !== "AbortError") setErr(e.message);
@@ -61,9 +56,31 @@ export default function Users() {
     return () => controller.abort();
   }, []);
 
-  // -----------------------------------
-  //          UI SECTION
-  // -----------------------------------
+  // ----------------------------------------------------
+  //     🔥 گرفتن تاریخچه ورود یک کاربر
+  // ----------------------------------------------------
+  const loadLoginLogs = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${BACKEND_URL}/api/loginlogs/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setLoginLogs(data.logs || []);
+      setExpandedUser(userId);
+    } catch (e) {
+      console.error("❌ Load login logs error:", e);
+    }
+  };
+
+  // ----------------------------------------------------
+  //                     UI SECTION
+  // ----------------------------------------------------
 
   if (loading)
     return (
@@ -100,27 +117,65 @@ export default function Users() {
               <th className="py-3 pr-4">Name</th>
               <th className="py-3 pr-4">Email</th>
               <th className="py-3 pr-4">Gender</th>
-              <th className="py-3 pr-4">Role</th>
               <th className="py-3 pr-4">Last Login</th>
+              <th className="py-3 pr-4">Logins</th>
             </tr>
           </thead>
 
           <tbody>
             {users.map((u, i) => (
-              <tr key={u.id} className="border-b hover:bg-green-50">
-                <td className="py-2 pr-4">{i + 1}</td>
-                <td className="py-2 pr-4">{u.name}</td>
-                <td className="py-2 pr-4">{u.email}</td>
-                <td className="py-2 pr-4 capitalize">{u.gender}</td>
-                <td className="py-2 pr-4 uppercase">{u.role}</td>
+              <>
+                <tr key={u.id} className="border-b hover:bg-green-50">
+                  <td className="py-2 pr-4">{i + 1}</td>
+                  <td className="py-2 pr-4">{u.name}</td>
+                  <td className="py-2 pr-4">{u.email}</td>
+                  <td className="py-2 pr-4 capitalize">{u.gender}</td>
 
-                {/* 🔥 نمایش آخرین ورود */}
-                <td className="py-2 pr-4">
-                  {u.last_login
-                    ? new Date(u.last_login).toLocaleString("ro-RO")
-                    : "—"}
-                </td>
-              </tr>
+                  {/* آخرین ورود */}
+                  <td className="py-2 pr-4">
+                    {u.last_login
+                      ? new Date(u.last_login).toLocaleString("ro-RO")
+                      : "—"}
+                  </td>
+
+                  {/* دکمه تاریخچه ورود */}
+                  <td className="py-2 pr-4">
+                    <button
+                      className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      onClick={() =>
+                        expandedUser === u.id
+                          ? setExpandedUser(null)
+                          : loadLoginLogs(u.id)
+                      }
+                    >
+                      {expandedUser === u.id ? "Hide" : "View"}
+                    </button>
+                  </td>
+                </tr>
+
+                {/* 🔥 تاریخچه ورود در همان صفحه */}
+                {expandedUser === u.id && (
+                  <tr className="bg-green-50">
+                    <td colSpan="6" className="p-4">
+                      <h3 className="font-bold text-green-700 mb-2">
+                        Login History:
+                      </h3>
+
+                      {loginLogs.length === 0 ? (
+                        <p>No login logs found.</p>
+                      ) : (
+                        <ul className="list-disc pl-6">
+                          {loginLogs.map((log, idx) => (
+                            <li key={idx}>
+                              {new Date(log.login_time).toLocaleString("ro-RO")}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </>
             ))}
           </tbody>
         </table>
