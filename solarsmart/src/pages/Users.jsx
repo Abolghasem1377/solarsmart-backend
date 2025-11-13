@@ -16,7 +16,6 @@ export default function Users() {
         setLoading(true);
         setErr("");
 
-        // 🔐 بررسی نقش کاربر ذخیره‌شده در localStorage
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const token = localStorage.getItem("token");
 
@@ -32,12 +31,11 @@ export default function Users() {
           return;
         }
 
-        // 🎯 درخواست به Backend واقعی
         const res = await fetch(`${BACKEND_URL}/api/users`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // 🔥 بسیار مهم
+            Authorization: `Bearer ${token}`,
           },
           signal: controller.signal,
         });
@@ -86,8 +84,23 @@ export default function Users() {
       </div>
     );
 
+  // ⏰ تبدیل زمان UTC به Europe/Bucharest
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+
+    return new Date(dateString).toLocaleString("en-GB", {
+      timeZone: "Europe/Bucharest",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow">
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow">
       <h1 className="text-2xl font-bold text-green-700 mb-4 text-center">
         👥 Registered Users
       </h1>
@@ -101,6 +114,7 @@ export default function Users() {
               <th className="py-3 pr-4">Email</th>
               <th className="py-3 pr-4">Gender</th>
               <th className="py-3 pr-4">Role</th>
+              <th className="py-3 pr-4">Last Login 🇷🇴</th>
             </tr>
           </thead>
 
@@ -112,6 +126,9 @@ export default function Users() {
                 <td className="py-2 pr-4">{u.email}</td>
                 <td className="py-2 pr-4 capitalize">{u.gender}</td>
                 <td className="py-2 pr-4">{u.role || "user"}</td>
+
+                {/* ⏰ نمایش زمان آخرین ورود به ساعت رومانی */}
+                <td className="py-2 pr-4">{formatDate(u.last_login)}</td>
               </tr>
             ))}
           </tbody>
