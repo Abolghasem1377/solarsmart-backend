@@ -5,7 +5,8 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const BACKEND_URL = "https://solarsmart-backend-new.onrender.com"; // ✅ لینک واقعی Render
+  // 🔥 لینک واقعی Render
+  const BACKEND_URL = "https://solarsmart-backend-new.onrender.com";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -15,17 +16,29 @@ export default function Users() {
         setLoading(true);
         setErr("");
 
-        // بررسی نقش کاربر از localStorage
+        // 🔐 بررسی نقش کاربر ذخیره‌شده در localStorage
         const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const token = localStorage.getItem("token");
+
         if (!user || user.role !== "admin") {
           setErr("Access denied: admin only 🚫");
           setLoading(false);
           return;
         }
 
-        // 📡 درخواست به Render
+        if (!token) {
+          setErr("No token found! Login again.");
+          setLoading(false);
+          return;
+        }
+
+        // 🎯 درخواست به Backend واقعی
         const res = await fetch(`${BACKEND_URL}/api/users`, {
-          headers: { "Content-Type": "application/json" },
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // 🔥 بسیار مهم
+          },
           signal: controller.signal,
         });
 
@@ -37,8 +50,10 @@ export default function Users() {
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);
       } catch (e) {
-        if (e.name !== "AbortError")
+        if (e.name !== "AbortError") {
+          console.error("❌ Users load error:", e);
           setErr(e.message || "Failed to load users");
+        }
       } finally {
         setLoading(false);
       }
@@ -47,6 +62,8 @@ export default function Users() {
     load();
     return () => controller.abort();
   }, []);
+
+  // ---------------------------- UI ---------------------------- //
 
   if (loading)
     return (
@@ -57,8 +74,8 @@ export default function Users() {
 
   if (err)
     return (
-      <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow text-red-600 text-center">
-        Error: {err}
+      <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow text-center text-red-600">
+        ❌ {err}
       </div>
     );
 
@@ -83,15 +100,18 @@ export default function Users() {
               <th className="py-3 pr-4">Name</th>
               <th className="py-3 pr-4">Email</th>
               <th className="py-3 pr-4">Gender</th>
+              <th className="py-3 pr-4">Role</th>
             </tr>
           </thead>
+
           <tbody>
             {users.map((u, i) => (
-              <tr key={u.id || i} className="border-b hover:bg-green-50">
+              <tr key={u.id} className="border-b hover:bg-green-50">
                 <td className="py-2 pr-4">{i + 1}</td>
-                <td className="py-2 pr-4">{u.name || "-"}</td>
-                <td className="py-2 pr-4">{u.email || "-"}</td>
-                <td className="py-2 pr-4 capitalize">{u.gender || "-"}</td>
+                <td className="py-2 pr-4">{u.name}</td>
+                <td className="py-2 pr-4">{u.email}</td>
+                <td className="py-2 pr-4 capitalize">{u.gender}</td>
+                <td className="py-2 pr-4">{u.role || "user"}</td>
               </tr>
             ))}
           </tbody>
