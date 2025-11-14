@@ -33,12 +33,15 @@ export default function Users() {
 
   const BACKEND = "https://solarsmart-backend-new.onrender.com";
 
+  // Load Users
   useEffect(() => {
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
-      .then((data) => setUsers(data));
+      .then((data) => setUsers(data))
+      .catch((err) => console.log("Users error:", err));
   }, []);
 
+  // Load login history for selected user
   const loadLogs = async (userId) => {
     const res = await fetch(`${BACKEND}/api/users/${userId}/logs`);
     const data = await res.json();
@@ -46,42 +49,42 @@ export default function Users() {
     setShowModal(true);
   };
 
+  // Load weekly stats (backend route: /api/stats/weekly-logins)
   useEffect(() => {
-    fetch(`${BACKEND}/api/stats/weekly`)
+    fetch(`${BACKEND}/api/stats/weekly-logins`)
       .then((res) => res.json())
-      .then((data) => setWeekly(data));
+      .then((data) => setWeekly(data))
+      .catch((err) => console.log("Weekly stats error:", err));
   }, []);
 
+  // Load monthly stats (backend route: /api/stats/monthly-logins)
   useEffect(() => {
-    fetch(`${BACKEND}/api/stats/monthly`)
+    fetch(`${BACKEND}/api/stats/monthly-logins`)
       .then((res) => res.json())
-      .then((data) => setMonthly(data));
+      .then((data) => setMonthly(data))
+      .catch((err) => console.log("Monthly stats error:", err));
   }, []);
 
-  const weeklyLabels = weekly.map((x) => x.day);
-  const weeklyValues = weekly.map((x) => x.count);
-
+  // Weekly chart data
   const weeklyData = {
-    labels: weeklyLabels,
+    labels: weekly.map((x) => x.day),
     datasets: [
       {
         label: "Weekly Logins",
-        data: weeklyValues,
+        data: weekly.map((x) => x.count),
         borderColor: "green",
         backgroundColor: "rgba(0,150,0,0.3)",
       },
     ],
   };
 
-  const monthlyLabels = monthly.map((x) => x.month);
-  const monthlyValues = monthly.map((x) => x.count);
-
+  // Monthly chart data
   const monthlyData = {
-    labels: monthlyLabels,
+    labels: monthly.map((x) => x.month),
     datasets: [
       {
         label: "Monthly Logins",
-        data: monthlyValues,
+        data: monthly.map((x) => x.count),
         backgroundColor: "rgba(0,100,255,0.5)",
       },
     ],
@@ -90,6 +93,7 @@ export default function Users() {
   return (
     <div className="max-w-6xl mx-auto p-6">
 
+      {/* USERS TABLE */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h1 className="text-2xl font-bold text-green-700 text-center mb-4">
           👥 Registered Users
