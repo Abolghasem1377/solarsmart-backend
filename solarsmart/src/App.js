@@ -16,7 +16,7 @@ import Calculator from "./pages/Calculator";
 import About from "./pages/About";
 import EconomicIdeas from "./pages/EconomicIdeas";
 import Users from "./pages/Users";
-import Dashboard from "./pages/Dashboard";
+// 🚫 Dashboard حذف شد
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 
@@ -77,14 +77,12 @@ export default function App() {
 
             <li><Link to="/ideas" className="hover:text-green-600">Ideas</Link></li>
 
-            {/* ✅ فقط ادمین می‌بیند */}
+            {/* 🔥 فقط ادمین */}
             {user?.role === "admin" && (
               <li><Link to="/users" className="hover:text-green-600">Users</Link></li>
             )}
 
-            {user?.role === "admin" && (
-              <li><Link to="/dashboard" className="hover:text-green-600">Dashboard</Link></li>
-            )}
+            {/* 🚫 Dashboard اینجا حذف شد */}
 
             <li><Link to="/about" className="hover:text-green-600">About</Link></li>
           </ul>
@@ -146,14 +144,12 @@ export default function App() {
               <Link to="/calculator" onClick={() => setIsMenuOpen(false)}>Calculator</Link>
               <Link to="/ideas" onClick={() => setIsMenuOpen(false)}>Ideas</Link>
 
-              {/* ✅ فقط ادمین */}
+              {/* 🔥 فقط ادمین */}
               {user?.role === "admin" && (
                 <Link to="/users" onClick={() => setIsMenuOpen(false)}>Users</Link>
               )}
 
-              {user?.role === "admin" && (
-                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
-              )}
+              {/* 🚫 Dashboard از اینجا حذف شد */}
 
               <Link to="/about" onClick={() => setIsMenuOpen(false)}>About</Link>
 
@@ -188,7 +184,7 @@ export default function App() {
               }
             />
 
-            {/* ✅ فقط ادمین می‌تواند وارد داشبورد شود */}
+            {/* 🚫 این روت حذف شد
             <Route
               path="/dashboard"
               element={
@@ -197,8 +193,8 @@ export default function App() {
                 </AdminRoute>
               }
             />
+            */}
 
-            {/* ✅ فقط ادمین می‌تواند صفحه Users را ببیند */}
             <Route
               path="/users"
               element={
