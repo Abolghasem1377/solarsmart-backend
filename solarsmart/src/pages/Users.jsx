@@ -1,3 +1,7 @@
+// =======================
+//     USERS.jsx – FINAL
+// =======================
+
 import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
@@ -24,6 +28,8 @@ ChartJS.register(
 );
 
 export default function Users() {
+  const BACKEND = "https://solarsmart-backend-new.onrender.com";
+
   const [users, setUsers] = useState([]);
   const [logs, setLogs] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -31,17 +37,21 @@ export default function Users() {
   const [weekly, setWeekly] = useState([]);
   const [monthly, setMonthly] = useState([]);
 
-  const BACKEND = "https://solarsmart-backend-new.onrender.com";
+  const [error, setError] = useState("");
 
-  // Load Users
+  // ============================
+  // Load all users
+  // ============================
   useEffect(() => {
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => setUsers(data))
-      .catch((err) => console.log("Users error:", err));
+      .catch(() => setError("Failed to load users"));
   }, []);
 
-  // Load login history for selected user
+  // ============================
+  // Load login logs
+  // ============================
   const loadLogs = async (userId) => {
     const res = await fetch(`${BACKEND}/api/users/${userId}/logs`);
     const data = await res.json();
@@ -49,23 +59,29 @@ export default function Users() {
     setShowModal(true);
   };
 
-  // Load weekly stats (backend route: /api/stats/weekly-logins)
+  // ============================
+  // WEEKLY STATS
+  // ============================
   useEffect(() => {
     fetch(`${BACKEND}/api/stats/weekly-logins`)
       .then((res) => res.json())
       .then((data) => setWeekly(data))
-      .catch((err) => console.log("Weekly stats error:", err));
+      .catch(() => setWeekly([]));
   }, []);
 
-  // Load monthly stats (backend route: /api/stats/monthly-logins)
+  // ============================
+  // MONTHLY STATS
+  // ============================
   useEffect(() => {
     fetch(`${BACKEND}/api/stats/monthly-logins`)
       .then((res) => res.json())
       .then((data) => setMonthly(data))
-      .catch((err) => console.log("Monthly stats error:", err));
+      .catch(() => setMonthly([]));
   }, []);
 
+  // ------------------------------
   // Weekly chart data
+  // ------------------------------
   const weeklyData = {
     labels: weekly.map((x) => x.day),
     datasets: [
@@ -78,7 +94,9 @@ export default function Users() {
     ],
   };
 
+  // ------------------------------
   // Monthly chart data
+  // ------------------------------
   const monthlyData = {
     labels: monthly.map((x) => x.month),
     datasets: [
@@ -93,21 +111,28 @@ export default function Users() {
   return (
     <div className="max-w-6xl mx-auto p-6">
 
-      {/* USERS TABLE */}
+      {/* ERROR DISPLAY */}
+      {error && (
+        <div className="bg-red-200 text-red-800 p-3 rounded mb-4 text-center">
+          {error}
+        </div>
+      )}
+
+      {/* ================= USERS TABLE ================= */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h1 className="text-2xl font-bold text-green-700 text-center mb-4">
           👥 Registered Users
         </h1>
 
-        <table className="min-w-full text-sm">
+        <table className="min-w-full text-left text-sm">
           <thead>
-            <tr className="bg-green-100 border-b">
+            <tr className="border-b bg-green-50 text-green-800">
               <th>#</th>
               <th>Name</th>
               <th>Email</th>
               <th>Gender</th>
               <th>Last Login</th>
-              <th>History</th>
+              <th>Logs</th>
             </tr>
           </thead>
 
@@ -118,7 +143,12 @@ export default function Users() {
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>{u.gender}</td>
-                <td>{u.last_login ? new Date(u.last_login).toLocaleString() : "—"}</td>
+                <td>
+                  {u.last_login
+                    ? new Date(u.last_login).toLocaleString()
+                    : "—"}
+                </td>
+
                 <td>
                   <button
                     onClick={() => loadLogs(u.id)}
@@ -133,37 +163,56 @@ export default function Users() {
         </table>
       </div>
 
-      {/* WEEKLY */}
+      {/* ================= WEEKLY CHART ================= */}
       <div className="mt-10 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-bold text-green-700 mb-4">📊 Weekly Logins</h2>
-        <Line data={weeklyData} />
+        <h2 className="text-xl font-bold text-green-700 mb-4">
+          📊 Weekly Logins (Last 7 Days)
+        </h2>
+
+        {weekly.length === 0 ? (
+          <p className="text-gray-500">No weekly data available</p>
+        ) : (
+          <Line data={weeklyData} />
+        )}
       </div>
 
-      {/* MONTHLY */}
+      {/* ================= MONTHLY CHART ================= */}
       <div className="mt-10 bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-bold text-blue-700 mb-4">📈 Monthly Logins</h2>
-        <Bar data={monthlyData} />
+        <h2 className="text-xl font-bold text-blue-700 mb-4">
+          📈 Monthly Logins (Last 6 Months)
+        </h2>
+
+        {monthly.length === 0 ? (
+          <p className="text-gray-500">No monthly data available</p>
+        ) : (
+          <Bar data={monthlyData} />
+        )}
       </div>
 
-      {/* MODAL */}
+      {/* ===================== MODAL ==================== */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-xl w-96">
-            <h2 className="text-xl font-bold mb-4">Login History</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[999]">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-xl">
+
+            <h2 className="text-xl font-bold text-green-700 mb-3">
+              Login History
+            </h2>
 
             {logs.length === 0 ? (
-              <p>No logs found</p>
+              <p>No login history found</p>
             ) : (
-              <ul className="list-disc ml-6">
-                {logs.map((l, i) => (
-                  <li key={i}>{new Date(l.login_time).toLocaleString()}</li>
+              <ul className="list-disc ml-5 max-h-72 overflow-y-auto">
+                {logs.map((l, idx) => (
+                  <li key={idx}>
+                    {new Date(l.login_time).toLocaleString()}
+                  </li>
                 ))}
               </ul>
             )}
 
             <button
               onClick={() => setShowModal(false)}
-              className="mt-4 bg-red-600 text-white px-4 py-2 rounded w-full"
+              className="mt-4 bg-red-500 text-white w-full py-2 rounded"
             >
               Close
             </button>
