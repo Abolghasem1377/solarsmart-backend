@@ -8,7 +8,6 @@ export default function Login({ setUser }) {
   const [message, setMessage] = useState("");
   const [lang, setLang] = useState("en");
 
-  // Backend URL
   const API_URL = "https://solarsmart-backend-new.onrender.com";
 
   const texts = {
@@ -58,19 +57,23 @@ export default function Login({ setUser }) {
       .then((res) => res.json())
       .then((data) => {
         if (data?.token) {
-          // ذخیره توکن و کاربر
+          // ذخیره توکن
           localStorage.setItem("token", data.token);
+
+          // ذخیره اطلاعات کاربر
           localStorage.setItem("user", JSON.stringify(data.user));
 
-          // ذخیره آخرین ورود
+          // ذخیره آخرین زمان ورود واقعی
           if (data.user.last_login) {
             localStorage.setItem("last_login", data.user.last_login);
           }
 
+          // ست کردن کاربر در برنامه
           if (setUser) setUser(data.user);
 
           setMessage(texts[lang].success);
 
+          // هدایت
           setTimeout(() => {
             if (data.user.role === "admin") navigate("/dashboard");
             else navigate("/calculator");
