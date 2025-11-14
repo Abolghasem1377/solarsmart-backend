@@ -57,23 +57,16 @@ export default function Login({ setUser }) {
       .then((res) => res.json())
       .then((data) => {
         if (data?.token) {
-          // ذخیره توکن
           localStorage.setItem("token", data.token);
-
-          // ذخیره اطلاعات کاربر
           localStorage.setItem("user", JSON.stringify(data.user));
 
-          // ذخیره آخرین زمان ورود واقعی
           if (data.user.last_login) {
             localStorage.setItem("last_login", data.user.last_login);
           }
 
-          // ست کردن کاربر در برنامه
           if (setUser) setUser(data.user);
-
           setMessage(texts[lang].success);
 
-          // هدایت
           setTimeout(() => {
             if (data.user.role === "admin") navigate("/dashboard");
             else navigate("/calculator");
@@ -112,7 +105,9 @@ export default function Login({ setUser }) {
         </h2>
 
         {message && (
-          <div className="mb-3 text-center text-sm text-gray-700">{message}</div>
+          <div className="mb-3 text-center text-sm text-gray-700">
+            {message}
+          </div>
         )}
 
         <input
