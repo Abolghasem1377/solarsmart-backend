@@ -5,7 +5,7 @@ export default function Users() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
-  const [logs, setLogs] = useState([]);      // ⬅️ NEW: login history
+  const [logs, setLogs] = useState([]);
   const [showModal, setShowModal] = useState(false);
 
   const BACKEND_URL = "https://solarsmart-backend-new.onrender.com";
@@ -17,7 +17,6 @@ export default function Users() {
       try {
         setLoading(true);
 
-        const token = localStorage.getItem("token");
         const res = await fetch(`${BACKEND_URL}/api/users`, {
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
@@ -36,15 +35,15 @@ export default function Users() {
     return () => controller.abort();
   }, []);
 
-  // ================
-  //   LOAD LOGS
-  // ================
+  // ===================
+  //  LOAD USER LOGINS
+  // ===================
   const loadLogs = async (userId) => {
     const res = await fetch(`${BACKEND_URL}/api/users/${userId}/logs`);
     const data = await res.json();
 
-    setLogs(data);      // ذخیره لاگ‌ها
-    setShowModal(true); // نمایش مودال
+    setLogs(data);
+    setShowModal(true);
   };
 
   if (loading) return <div className="p-6 text-center">Loading…</div>;
@@ -92,10 +91,12 @@ export default function Users() {
 
       {/* =================== MODAL =================== */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-xl w-96 shadow-lg">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-[9999]">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-lg z-[10000]">
 
-            <h2 className="text-xl font-bold mb-4 text-green-700">Login History</h2>
+            <h2 className="text-xl font-bold mb-4 text-green-700">
+              Login History
+            </h2>
 
             {logs.length === 0 ? (
               <p>No login history found.</p>
