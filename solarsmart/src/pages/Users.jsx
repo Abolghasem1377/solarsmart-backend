@@ -1,7 +1,3 @@
-// =======================
-//   Users.jsx – FINAL VERSION
-// =======================
-
 import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
@@ -36,63 +32,57 @@ export default function Users() {
 
   const BACKEND = "https://solarsmart-backend-new.onrender.com";
 
-  // -----------------------------
-  // Load All Users
-  // -----------------------------
+  // Load Users
   useEffect(() => {
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
-      .then((data) => setUsers(data));
+      .then((data) => setUsers(data))
+      .catch(() => {});
   }, []);
 
-  // -----------------------------
-  // Load single user logs
-  // -----------------------------
-  const loadLogs = async (id) => {
-    const res = await fetch(`${BACKEND}/api/users/${id}/logs`);
+  // Load logs for each user
+  const loadLogs = async (userId) => {
+    const res = await fetch(`${BACKEND}/api/users/${userId}/logs`);
     const data = await res.json();
+
     setLogs(data);
     setShowModal(true);
   };
 
-  // -----------------------------
-  // Weekly stats
-  // -----------------------------
+  // Load weekly stats
   useEffect(() => {
     fetch(`${BACKEND}/api/stats/weekly-logins`)
       .then((res) => res.json())
-      .then((data) => setWeekly(data));
+      .then((data) => setWeekly(data))
+      .catch(() => {});
   }, []);
 
-  // -----------------------------
-  // Monthly stats
-  // -----------------------------
+  // Load monthly stats
   useEffect(() => {
     fetch(`${BACKEND}/api/stats/monthly-logins`)
       .then((res) => res.json())
-      .then((data) => setMonthly(data));
+      .then((data) => setMonthly(data))
+      .catch(() => {});
   }, []);
 
-  // Weekly chart config
   const weeklyData = {
-    labels: weekly.map((d) => d.day),
+    labels: weekly.map((x) => x.day),
     datasets: [
       {
         label: "Logins",
-        data: weekly.map((d) => d.count),
+        data: weekly.map((x) => x.count),
         borderColor: "green",
-        backgroundColor: "rgba(0,128,0,0.3)",
+        backgroundColor: "rgba(16,180,16,0.4)",
       },
     ],
   };
 
-  // Monthly chart config
   const monthlyData = {
-    labels: monthly.map((d) => d.month),
+    labels: monthly.map((x) => x.month),
     datasets: [
       {
         label: "Logins",
-        data: monthly.map((d) => d.count),
+        data: monthly.map((x) => x.count),
         backgroundColor: "rgba(0,150,255,0.5)",
       },
     ],
@@ -107,9 +97,9 @@ export default function Users() {
           👥 Registered Users
         </h1>
 
-        <table className="min-w-full text-sm">
+        <table className="min-w-full text-left text-sm">
           <thead>
-            <tr className="bg-green-50 text-green-700 border-b">
+            <tr className="border-b bg-green-50 text-green-800">
               <th>#</th>
               <th>Name</th>
               <th>Email</th>
@@ -126,7 +116,12 @@ export default function Users() {
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>{u.gender}</td>
-                <td>{u.last_login ? new Date(u.last_login).toLocaleString() : "—"}</td>
+                <td>
+                  {u.last_login
+                    ? new Date(u.last_login).toLocaleString()
+                    : "—"}
+                </td>
+
                 <td>
                   <button
                     onClick={() => loadLogs(u.id)}
@@ -161,28 +156,31 @@ export default function Users() {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-xl w-96 shadow-xl">
-            <h2 className="text-xl font-bold text-green-700 mb-4">Login History</h2>
+            <h2 className="text-xl font-bold text-green-700 mb-3">
+              Login History
+            </h2>
 
             {logs.length === 0 ? (
               <p>No login history found.</p>
             ) : (
-              <ul className="list-disc ml-4 max-h-72 overflow-y-auto">
-                {logs.map((l, i) => (
-                  <li key={i}>{new Date(l.login_time).toLocaleString()}</li>
+              <ul className="list-disc ml-5 max-h-72 overflow-y-auto">
+                {logs.map((l, idx) => (
+                  <li key={idx}>
+                    {new Date(l.login_time).toLocaleString()}
+                  </li>
                 ))}
               </ul>
             )}
 
             <button
               onClick={() => setShowModal(false)}
-              className="mt-4 w-full bg-red-500 text-white py-2 rounded"
+              className="mt-4 bg-red-500 text-white w-full py-2 rounded"
             >
               Close
             </button>
           </div>
         </div>
       )}
-
     </div>
   );
 }
