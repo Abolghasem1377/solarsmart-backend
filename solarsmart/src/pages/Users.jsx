@@ -1,31 +1,10 @@
 // =======================
 //     USERS.jsx – FINAL
+//     Using Chart.js directly (no react-chartjs-2)
 // =======================
 
-import React, { useEffect, useState } from "react";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-import { Line, Bar } from "react-chartjs-2";
-
-// Register chart components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Tooltip,
-  Legend
-);
+import React, { useEffect, useState, useRef } from "react";
+import Chart from "chart.js/auto";
 
 export default function Users() {
   const BACKEND = "https://solarsmart-backend-new.onrender.com";
@@ -39,6 +18,12 @@ export default function Users() {
 
   const [error, setError] = useState("");
 
+  // ref برای canvas ها و خود چارت‌ها
+  const weeklyCanvasRef = useRef(null);
+  const monthlyCanvasRef = useRef(null);
+  const weeklyChartRef = useRef(null);
+  const monthlyChartRef = useRef(null);
+
   // ============================
   // Load all users
   // ============================
@@ -50,13 +35,17 @@ export default function Users() {
   }, []);
 
   // ============================
-  // Load login logs
+  // Load login logs for one user
   // ============================
   const loadLogs = async (userId) => {
-    const res = await fetch(`${BACKEND}/api/users/${userId}/logs`);
-    const data = await res.json();
-    setLogs(data);
-    setShowModal(true);
+    try {
+      const res = await fetch(`${BACKEND}/api/users/${userId}/logs`);
+      const data = await res.json();
+      setLogs(data);
+      setShowModal(true);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // ============================
@@ -79,46 +68,84 @@ export default function Users() {
       .catch(() => setMonthly([]));
   }, []);
 
-  // ------------------------------
-  // Weekly chart data
-  // ------------------------------
-  const weeklyData = {
-    labels: weekly.map((x) => x.day),
-    datasets: [
-      {
-        label: "Weekly Logins",
-        data: weekly.map((x) => x.count),
-        borderColor: "green",
-        backgroundColor: "rgba(0,150,0,0.3)",
-      },
-    ],
-  };
+  // ============================
+  // Draw weekly chart with Chart.js
+  // ============================
+  useEffect(() => {
+    if (!weeklyCanvasRef.current) return;
 
-  // ------------------------------
-  // Monthly chart data
-  // ------------------------------
-  const monthlyData = {
-    labels: monthly.map((x) => x.month),
-    datasets: [
-      {
-        label: "Monthly Logins",
-        data: monthly.map((x) => x.count),
-        backgroundColor: "rgba(0,100,255,0.5)",
+    // اگر چارت قبلی وجود داشت، پاکش کن
+    if (weeklyChartRef.current) {
+      weeklyChartRef.current.destroy();
+    }
+
+    const labels = weekly.map((x) => x.day);
+    const values = weekly.map((x) => x.count);
+
+    weeklyChartRef.current = new Chart(weeklyCanvasRef.current, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Weekly Logins",
+            data: values,
+            borderColor: "green",
+            backgroundColor: "rgba(0,150,0,0.25)",
+            tension: 0.3,
+          },
+        ],
       },
-    ],
-  };
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }, [weekly]);
+
+  // ============================
+  // Draw monthly chart with Chart.js
+  // ============================
+  useEffect(() => {
+    if (!monthlyCanvasRef.current) return;
+
+    if (monthlyChartRef.current) {
+      monthlyChartRef.current.destroy();
+    }
+
+    const labels = monthly.map((x) => x.month);
+    const values = monthly.map((x) => x.count);
+
+    monthlyChartRef.current = new Chart(monthlyCanvasRef.current, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Monthly Logins",
+            data: values,
+            backgroundColor: "rgba(0,100,255,0.5)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  }, [monthly]);
 
   return (
     <div className="max-w-6xl mx-auto p-6">
 
-      {/* ERROR DISPLAY */}
+      {/* ERROR MESSAGE */}
       {error && (
         <div className="bg-red-200 text-red-800 p-3 rounded mb-4 text-center">
           {error}
         </div>
       )}
 
-      {/* ================= USERS TABLE ================= */}
+      {/* ============ USERS TABLE ============ */}
       <div className="bg-white p-6 rounded-xl shadow">
         <h1 className="text-2xl font-bold text-green-700 text-center mb-4">
           👥 Registered Users
@@ -135,7 +162,6 @@ export default function Users() {
               <th>Logs</th>
             </tr>
           </thead>
-
           <tbody>
             {users.map((u, i) => (
               <tr key={u.id} className="border-b">
@@ -148,7 +174,6 @@ export default function Users() {
                     ? new Date(u.last_login).toLocaleString()
                     : "—"}
                 </td>
-
                 <td>
                   <button
                     onClick={() => loadLogs(u.id)}
@@ -163,43 +188,44 @@ export default function Users() {
         </table>
       </div>
 
-      {/* ================= WEEKLY CHART ================= */}
+      {/* ============ WEEKLY CHART ============ */}
       <div className="mt-10 bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-bold text-green-700 mb-4">
           📊 Weekly Logins (Last 7 Days)
         </h2>
-
         {weekly.length === 0 ? (
           <p className="text-gray-500">No weekly data available</p>
         ) : (
-          <Line data={weeklyData} />
+          <div className="w-full h-64">
+            <canvas ref={weeklyCanvasRef} />
+          </div>
         )}
       </div>
 
-      {/* ================= MONTHLY CHART ================= */}
+      {/* ============ MONTHLY CHART ============ */}
       <div className="mt-10 bg-white p-6 rounded-xl shadow">
         <h2 className="text-xl font-bold text-blue-700 mb-4">
           📈 Monthly Logins (Last 6 Months)
         </h2>
-
         {monthly.length === 0 ? (
           <p className="text-gray-500">No monthly data available</p>
         ) : (
-          <Bar data={monthlyData} />
+          <div className="w-full h-64">
+            <canvas ref={monthlyCanvasRef} />
+          </div>
         )}
       </div>
 
-      {/* ===================== MODAL ==================== */}
+      {/* ============ MODAL ============ */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[999]">
           <div className="bg-white p-6 rounded-xl w-96 shadow-xl">
-
             <h2 className="text-xl font-bold text-green-700 mb-3">
               Login History
             </h2>
 
             {logs.length === 0 ? (
-              <p>No login history found</p>
+              <p>No login history found.</p>
             ) : (
               <ul className="list-disc ml-5 max-h-72 overflow-y-auto">
                 {logs.map((l, idx) => (
